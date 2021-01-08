@@ -1,0 +1,22 @@
+# Calcule la taille du plus grand stable pour un G(n,p)
+
+def max_stable(n, p):
+    q = 1 - p
+    s = 1
+    binom = n
+    esp = binom
+    while esp >= 1:
+        binom = ((n - s) / (s + 1)) * binom
+        s += 1
+        esp = binom * q ** ((s * (s - 1)) / 2)
+    return s - 1
+
+
+# Calcule le nombre de couleur necessaire a partir des plus grand stable
+
+def color_theorique(n, p):
+    k = 0
+    while n > 0:
+        n = n - max_stable(n, p)
+        k += 1
+    return k
