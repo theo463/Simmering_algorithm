@@ -1,0 +1,127 @@
+import math
+import random as rd
+import time
+
+# détermine si oui ou non un ensemble de sommet est un stable du graphe g
+def eststable(g, set):
+    for i in set:
+        if len(set & g[i]) != 0:
+            return False
+    return True
+
+
+# un colorige sigma d'un graphe g est une liste d'ensemble de sommet telle que
+# pour chaque sommet i de g il existe k (un entier) tel que i appartient à sima[k] et i est de couleur k
+
+# determine si le coloriage sigma d'un graphe g est admissible ou non
+def coloradmis(sigma, g):
+    for st in sigma:
+        if not eststable(g, st):
+            return False
+    return True
+
+
+# Crée un coloriage sigma à l couleur àléatoire
+def coloralea(g, l):
+    sigma = [set() for j in range(l)]
+    for i in range(len(g)):
+        k = rd.randint(0, l - 1)
+        sigma[k].add(i)
+    return sigma
+
+
+# fonction h_jk(sigma)
+def h_jk(g, j, k, sigma, h):
+    somme = 0
+    for i in g[j]:
+        if i in sigma[k]:
+            somme += 1
+    if j in sigma[k]:
+        return h * (len(g[j]) / len(sigma)) - somme
+    else:
+        return -somme
+
+
+# determine la prochaine couleur k<l du sommet j en utilisant l'aléatoire
+def newcolor_j(beta, g, j, sigma, h):
+    Z = 0
+    vect = []
+    for k in range(len(sigma)):
+        Z += math.exp(beta * h_jk(g, j, k, sigma, h))
+        vect.append(Z)
+    x = rd.random() * Z
+    color = 0
+    while x > vect[color]:
+        color += 1
+    return color
+
+
+#Calcule le chavauchement 
+def chevauchement(sigma, tau, g):
+    chev = 0
+    for k in range(len(sigma)):
+        chev += len(sigma[k] & tau[k])
+    return chev / len(g)
+
+#Calcule la moyenne de chevauchement à 1 pas pour un liste
+def moychev1(list, g):
+    moy = 0
+    for i in range(len(list) - 1):
+        moy += chevauchement(list[i], list[i + 1], g)
+    return moy / (len(list) - 1)
+
+#Calcule la moyenne de chevauchement à 2 pas pour un liste
+def moychev2(list, g):
+    moy = 0
+    for i in range(len(list) - 2):
+        moy += chevauchement(list[i], list[i + 2], g)
+    return moy / (len(list) - 2)
+
+# Algorithme de réajustement
+def reajustement(beta, h, list, g):
+    ch1 = moychev1(list, g)
+    ch2 = moychev2(list, g)
+    s = "%.2f  %.2f  " % (ch1, ch2)
+    print(s, end="")
+    if ch1 > 1 / 2:
+        p = rd.random()
+        if p < 1 / 3:
+            beta = beta * 0.9
+        else:
+            h = h * 0.9
+    else:
+        if ch2 > 0.5:
+            beta = beta * 0.9
+        else:
+            if ch1 < 1 / 4:
+                h = h / 0.9
+            else:
+                p = rd.random()
+                if p < 2 / 3:
+                    beta = beta / 0.9
+                else:
+                    h = h / 0.9
+    return beta, h
+
+#Algorithm de mijotage
+def mijotage(g, beta, h, l, t_max):
+    debut = time.time()
+    sigma = coloralea(g, l)
+    list = [sigma]
+    compt = 1
+    while not coloradmis(sigma, g):
+        if time.time() - debut > t_max:
+            return "non convergent"
+        tau = [set() for j in range(l)]
+        for j in g:
+            tau[newcolor_j(beta, g, j, sigma, h)].add(j)
+
+        if compt < 129:
+            list.append(tau)
+            compt += 1
+        else:
+            beta, h = reajustement(beta, h, list, g)
+            list = []
+            compt = 0
+        sigma = tau
+    return time.time() - debut
