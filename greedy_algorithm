@@ -1,0 +1,45 @@
+import random as rd
+import time
+
+# renvoie une liste de sommet idépendant entre eux
+def stable(g):
+    s = rd.choice([cle for cle in g])
+    parc = {cle for cle in g} - g[s]
+    stab = {s}
+    for i in parc:
+        if len(g[i] & stab) == 0:
+            stab.add(i)
+    return stab
+
+
+# A partir d'u graphe et d'un ensemble de sommets suprime ces sommets
+# dans le graphe
+
+def suppr(g, l):
+    d = dict()
+    d.update(g)
+    for i in l:
+        del d[i]
+    for cle in d:
+        d[cle] = d[cle] - l
+    return d
+
+
+# Algo récursif qui détermine une coloration de graphe
+def coloration_glouton(g):
+    if len(g) == 0:
+        return []
+    else:
+        x = stable(g)
+        return [x] + coloration_glouton(suppr(g, x))
+
+# Cherche la meilleur solution de l'algorithme  glouton en un temps donné
+
+def iterat_glouton(g, t_max):
+    debut = time.time()
+    color = coloration_glouton(g)
+    while time.time() - debut < t_max:
+        newcolor = coloration_glouton(g)
+        if len(newcolor) < len(color):
+            color = newcolor
+    return color
