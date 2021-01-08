@@ -1,0 +1,11 @@
+# Création d'un graphe d'Erdos Renyi
+def graphe(n, p):
+    graph = dict()
+    for k in range(n):
+        graph[k] = set()
+    for i in range(n):
+        for j in range(i + 1, n):
+            if rd.random() <= p:
+                graph[i].add(j)
+                graph[j].add(i)
+    return graph
